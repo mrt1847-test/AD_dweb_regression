@@ -65,3 +65,9 @@ class Etc():
             raise Exception(f"Query failed with state: {state}")
 
         return state_data.get("result", {})
+
+    def goto_vip(self):
+        self.page.goto("https://item.gmarket.co.kr/Item?goodscode=3408801000")
+
+    def goto_vip_starship(self):
+        self.page.goto("https://item.gmarket.co.kr/Item?goodscode=1784246790")
