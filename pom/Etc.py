@@ -66,8 +66,8 @@ class Etc():
 
         return state_data.get("result", {})
 
-    def goto_vip(self):
-        self.page.goto("https://item.gmarket.co.kr/Item?goodscode=3408801000")
+    def goto_vip(self,goods_num):
+        self.page.goto(f"https://item.gmarket.co.kr/Item?goodscode={goods_num}")
 
     def goto_vip_starship(self):
         self.page.goto("https://item.gmarket.co.kr/Item?goodscode=1784246790")

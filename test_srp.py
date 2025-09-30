@@ -2,11 +2,11 @@
 from pom.SrpPage import Srp
 from pom.Etc import Etc
 from utils.db_check import DatabricksSPClient
-import time
 import json
 from utils.TimeLogger import TimeLogger
 import pytest
-from search_data import search_testcases1, search_testcases2, search_testcases3, search_testcases4, search_testcases5, search_testcases6
+from case_data.search_data import search_testcases1, search_testcases2, search_testcases3, search_testcases4
+
 
 #--
 @pytest.mark.flaky(reruns=2, reruns_delay=1)
@@ -16,7 +16,7 @@ def test_srp_1(page, keyword, case_id, request):
     request.node._testrail_case_id = case_id
     etc = Etc(page)
     srp_page = Srp(page)
-    logger = TimeLogger("test_srp.json")
+    logger = TimeLogger("json/test_srp.json")
 
     # g마켓 홈 으로 이동
     etc.goto()
@@ -44,7 +44,7 @@ def test_srp_2(page, keyword, case_id, request):
     request.node._testrail_case_id = case_id
     etc = Etc(page)
     srp_page = Srp(page)
-    logger = TimeLogger("test_srp.json")
+    logger = TimeLogger("json/test_srp.json")
 
     # g마켓 홈 으로 이동
     etc.goto()
@@ -76,7 +76,7 @@ def test_srp_3(keyword, case_id, request):
     # TestRail 케이스 ID를 현재 실행 노드에 저장
     request.node._testrail_case_id = case_id
     db_check = DatabricksSPClient()
-    with open("test_srp.json", "r", encoding="utf-8") as f:
+    with open("json/test_srp.json", "r", encoding="utf-8") as f:
         test_record = json.load(f)
     goodscode = test_record[0]["case1"][keyword]["상품번호"]
     click_time = test_record[0]["case1"][keyword]["click"]
@@ -90,7 +90,7 @@ def test_srp_4(keyword, case_id, request):
     # TestRail 케이스 ID를 현재 실행 노드에 저장
     request.node._testrail_case_id = case_id
     db_check = DatabricksSPClient()
-    with open("test_srp.json", "r", encoding="utf-8") as f:
+    with open("json/test_srp.json", "r", encoding="utf-8") as f:
         test_record = json.load(f)
     goodscode = test_record[0]["case2"][keyword]["상품번호"]
     click_time = test_record[0]["case2"][keyword]["click"]
