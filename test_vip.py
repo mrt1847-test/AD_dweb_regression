@@ -2,9 +2,14 @@ from pom.SrpPage import Srp
 from pom.VipPage import Vip
 from pom.Etc import Etc
 from utils.db_check import DatabricksSPClient
-
+import json
+from utils.TimeLogger import TimeLogger
+import pytest
+from vip_data import vip_testcases1, vip_testcases2
 #pipenv run pytest --cache-clear test.py
 
+@pytest.mark.flaky(reruns=2, reruns_delay=1)
+@pytest.mark.parametrize("keyword, case_id", vip_testcases1, ids=[c for _, c in vip_testcases1])
 def test_vip_1(page):
     etc = Etc(page)
     vip_page = Vip(page)
@@ -21,7 +26,8 @@ def test_vip_1(page):
     # 상품 클릭후 해당 vip 이동 확인
     vip_page.click_goods(goodscode, target)
 
-
+@pytest.mark.flaky(reruns=2, reruns_delay=1)
+@pytest.mark.parametrize("keyword, case_id", search_testcases2, ids=[c for _, c in search_testcases2])
 def test_vip_2(page):
     etc = Etc(page)
     vip_page = Vip(page)
