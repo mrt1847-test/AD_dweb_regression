@@ -10,7 +10,6 @@ from case_data.search_data import search_testcases1, search_testcases2, search_t
 import io
 import contextlib
 
-
 #--
 @pytest.mark.flaky(reruns=2, reruns_delay=1)
 @pytest.mark.parametrize("keyword, case_id", search_testcases1, ids=[c for _, c in search_testcases1])
@@ -82,7 +81,13 @@ def test_srp_2(page, keyword, case_id, request):
 
 # def test_wait_15min():
 #     time.sleep(930)
-#
+
+def test_fetch_from_db():
+    db_check = DatabricksSPClient()
+    global click_db
+    sql = f"select ins_date, cguid from baikali1xs.ad_ats_silver.ub_ad_cpc_click_gmkt where ins_date >='{click_time}' and item_no ='{goodscode}' and cguid = '11412244806446005562000000' limit 10 ;"
+    click_db= db_check.query_databricks(sql)
+
 @pytest.mark.flaky(reruns=2, reruns_delay=1)
 @pytest.mark.parametrize("keyword, case_id", search_testcases3, ids=[c for _, c in search_testcases3])
 def test_srp_3(keyword, case_id, request):
@@ -96,9 +101,8 @@ def test_srp_3(keyword, case_id, request):
     with contextlib.redirect_stdout(output_content):
         goodscode = test_record[0]["case1"][keyword]["상품번호"]
         click_time = test_record[0]["case1"][keyword]["click"]
-        # sql = f"select ins_date, cguid from baikali1xs.ad_ats_silver.ub_ad_cpc_click_gmkt where ins_date >='{click_time}' and item_no ='{goodscode}' and cguid = '11412244806446005562000000' limit 10 ;"
-        # a= db_check.query_databricks(sql)
-        # print(a)
+        expose_time = test_record[0]["case1"][keyword]["exposure"]
+        assert click_time in click_db["data_array"][0][0]
     # hook에서 사용하기 위해 item에 저장
     request.node._stdout_capture = output_content.getvalue()
 
