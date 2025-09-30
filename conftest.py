@@ -1,3 +1,4 @@
+import shutil
 from playwright.sync_api import sync_playwright, Browser, BrowserContext, Page
 from src.gtas_python_core.gtas_python_core_testrail import *
 from src.gtas_python_core.gtas_python_core_vault import Vault
@@ -63,9 +64,12 @@ def testrail_get(endpoint):
     return r.json()
 
 
-def testrail_post(endpoint, payload):
+def testrail_post(endpoint, payload=None, files=None):
     url = f"{TESTRAIL_BASE_URL}/index.php?/api/v2/{endpoint}"
-    r = requests.post(url, json=payload, auth=(TESTRAIL_USER, TESTRAIL_TOKEN))
+    if files:
+        r = requests.post(url, auth=(TESTRAIL_USER, TESTRAIL_TOKEN), files=files)
+    else:
+        r = requests.post(url, auth=(TESTRAIL_USER, TESTRAIL_TOKEN), json=payload)
     r.raise_for_status()
     return r.json()
 
@@ -104,48 +108,53 @@ def pytest_sessionstart(session):
     testrail_run_id = run["id"]
     print(f"[TestRail] section_id '{TESTRAIL_SECTION_ID}' Run 생성 완료 (ID={testrail_run_id})")
 
-
-
-
-
-
-
-
-
-
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     """
-    각 테스트 결과를 TestRail에 기록
+    각 테스트 결과를 TestRail에 기록 + 실패 시 스크린샷 첨부
     """
     outcome = yield
     result = outcome.get_result()
-
-    case_id = getattr(item, "_testrail_case_id", None)
+    # case_id 가져오기 (parametrize에서 받은 값 기준)
+    case_id = item.funcargs.get("case_id")
     if case_id is None or testrail_run_id is None:
         return
-
-    # Cxxxxxx 형태일 경우 숫자만 추출
+    # Cxxxx 형태면 숫자만 추출
     if isinstance(case_id, str) and case_id.startswith("C"):
         case_id = case_id[1:]
     case_id = int(case_id)  # API는 int만 허용
-
-    if result.when == "call":  # 실행 시점 결과만 기록
+    if result.when == "call":  # 실제 실행 결과만 처리
         if result.failed:
             status_id = 5  # Failed
             comment = f"테스트 실패: {result.longrepr}"
+            # 실패 시 스크린샷
+            page = item.funcargs.get("page")
+            screenshot_path = None
+            if page:
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                screenshot_path = f"screenshots/{case_id}_{timestamp}.png"
+                os.makedirs(os.path.dirname(screenshot_path), exist_ok=True)
+                page.screenshot(path=screenshot_path)
         elif result.skipped:
             status_id = 2  # Blocked
             comment = "테스트 스킵"
+            screenshot_path = None
         else:
             status_id = 1  # Passed
             comment = "테스트 성공"
-
+            screenshot_path = None
+        # TestRail 결과 기록
         payload = {"status_id": status_id, "comment": comment}
-        testrail_post(f"add_result_for_case/{testrail_run_id}/{case_id}", payload)
+        result_obj = testrail_post(f"add_result_for_case/{testrail_run_id}/{case_id}", payload)
+        result_id = result_obj["id"]
+        # 실패 시 스크린샷 첨부
+        if screenshot_path:
+            with open(screenshot_path, "rb") as f:
+                testrail_post(f"add_attachment_to_result/{result_id}", files={"attachment": f})
         print(f"[TestRail] case {case_id} 결과 기록 ({status_id})")
 
 
+@pytest.hookimpl(trylast=True)
 def pytest_sessionfinish(session, exitstatus):
     """
     전체 테스트 종료 후 Run 닫기
@@ -154,6 +163,11 @@ def pytest_sessionfinish(session, exitstatus):
     if testrail_run_id:
         testrail_post(f"close_run/{testrail_run_id}", {})
         print(f"[TestRail] Run {testrail_run_id} 종료 완료")
+
+    screenshots_dir = "screenshots"
+    if os.path.exists(screenshots_dir):
+        shutil.rmtree(screenshots_dir)  # 폴더 통째로 삭제
+        print(f"[CLEANUP] '{screenshots_dir}' 폴더 삭제 완료")
 
 
 

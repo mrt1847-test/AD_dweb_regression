@@ -11,8 +11,10 @@ class Etc():
 
     def login(self, username: str, password: str):
         self.page.click("text=로그인")
+        time.sleep(2)
         self.page.fill("#typeMemberInputId", username)
         self.page.fill("#typeMemberInputPassword", password)
+        time.sleep(2)
         self.page.click("#btn_memberLogin")
 
     def query_databricks(workspace_url: str, access_token: str, warehouse_id: str, sql: str):

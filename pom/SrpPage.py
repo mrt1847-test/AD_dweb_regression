@@ -72,7 +72,7 @@ class Srp():
             element.click()
         new_page = new_page_info.value
         url = new_page.url
-        time.sleep(5)
+        time.sleep(2)
         print("#", runtext, "종료")
 
         runtext = f'SRP > {goodscode} 상품 이동확인'

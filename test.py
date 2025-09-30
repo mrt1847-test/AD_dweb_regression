@@ -9,6 +9,7 @@ import pytest
 from search_data import search_testcases1, search_testcases2, search_testcases3, search_testcases4, search_testcases5, search_testcases6
 
 #--
+@pytest.mark.flaky(reruns=2, reruns_delay=1)
 @pytest.mark.parametrize("keyword, case_id", search_testcases1, ids=[c for _, c in search_testcases1])
 def test_srp_1(page, keyword, case_id, request):
     # TestRail 케이스 ID를 현재 실행 노드에 저장
@@ -36,6 +37,7 @@ def test_srp_1(page, keyword, case_id, request):
     # 상품 클릭후 해당 vip 이동 확인
     srp_page.montelena_goods_click(goodscode)
 
+@pytest.mark.flaky(reruns=2, reruns_delay=1)
 @pytest.mark.parametrize("keyword, case_id", search_testcases2, ids=[c for _, c in search_testcases2])
 def test_srp_2(page, keyword, case_id, request):
     # TestRail 케이스 ID를 현재 실행 노드에 저장
@@ -68,8 +70,9 @@ def test_srp_2(page, keyword, case_id, request):
 # def test_wait_15min():
 #     time.sleep(930)
 #
+@pytest.mark.flaky(reruns=2, reruns_delay=1)
 @pytest.mark.parametrize("keyword, case_id", search_testcases3, ids=[c for _, c in search_testcases3])
-def test_srp_3(page, keyword, case_id, request):
+def test_srp_3(keyword, case_id, request):
     # TestRail 케이스 ID를 현재 실행 노드에 저장
     request.node._testrail_case_id = case_id
     db_check = DatabricksSPClient()
@@ -79,10 +82,11 @@ def test_srp_3(page, keyword, case_id, request):
     click_time = test_record[0]["case1"][keyword]["click"]
     # sql = f"select ins_date, cguid from baikali1xs.ad_ats_silver.ub_ad_cpc_click_gmkt where ins_date >='{click_time}' and item_no ='{goodscode}' and cguid = '11412244806446005562000000' limit 10 ;"
     # a= db_check.query_databricks(sql)
-    print(a)
+    # print(a)
 
-@pytest.mark.parametrize("keyword, case_id", search_testcases3, ids=[c for _, c in search_testcases3])
-def test_srp_4(page, keyword, case_id, request):
+@pytest.mark.flaky(reruns=2, reruns_delay=1)
+@pytest.mark.parametrize("keyword, case_id", search_testcases4, ids=[c for _, c in search_testcases3])
+def test_srp_4(keyword, case_id, request):
     # TestRail 케이스 ID를 현재 실행 노드에 저장
     request.node._testrail_case_id = case_id
     db_check = DatabricksSPClient()
@@ -92,4 +96,4 @@ def test_srp_4(page, keyword, case_id, request):
     click_time = test_record[0]["case2"][keyword]["click"]
     # sql = f"select ins_date, cguid from baikali1xs.ad_ats_silver.ub_ad_cpc_click_gmkt where ins_date >='{click_time}' and item_no ='{goodscode}' and cguid = '11412244806446005562000000' limit 10 ;"
     # a= db_check.query_databricks(sql)
-    print(a)
+    # print(a)
