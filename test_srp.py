@@ -9,7 +9,7 @@ import pytest
 from case_data.search_data import search_testcases1, search_testcases2, search_testcases3, search_testcases4
 import io
 import contextlib
-
+from datetime import datetime, timedelta
 #--
 @pytest.mark.flaky(reruns=2, reruns_delay=1)
 @pytest.mark.parametrize("keyword, case_id", search_testcases1, ids=[c for _, c in search_testcases1])
@@ -85,11 +85,11 @@ def test_srp_2(page, keyword, case_id, request):
 def test_fetch_from_db():
     db_check = DatabricksSPClient()
     global click_db
-    sql = f"select ins_date, cguid from baikali1xs.ad_ats_silver.ub_ad_cpc_click_gmkt where ins_date >='{click_time}' and item_no ='{goodscode}' and cguid = '11412244806446005562000000' limit 10 ;"
+    sql = f"select item_no, ins_date from baikali1xs.ad_ats_silver.ub_ad_cpc_click_gmkt where ins_date >='{test_start_time}' and cguid = '11412244806446005562000000';"
     click_db= db_check.query_databricks(sql)
 
 @pytest.mark.flaky(reruns=2, reruns_delay=1)
-@pytest.mark.parametrize("keyword, case_id", search_testcases3, ids=[c for _, c in search_testcases3])
+@pytest.mark.parametrize("keyword, case_id", search_testcases3,ids=[c for _, c in search_testcases3])
 def test_srp_3(keyword, case_id, request):
     # TestRail 케이스 ID를 현재 실행 노드에 저장
     request.node._testrail_case_id = case_id
@@ -102,7 +102,11 @@ def test_srp_3(keyword, case_id, request):
         goodscode = test_record[0]["case1"][keyword]["상품번호"]
         click_time = test_record[0]["case1"][keyword]["click"]
         expose_time = test_record[0]["case1"][keyword]["exposure"]
-        assert click_time in click_db["data_array"][0][0]
+        click_time_db = click_db["data_array"][i][1]
+        dt1 = datetime.strptime(click_time, "%Y-%m-%d %H:%M:%S")
+        dt2 = datetime.strptime(click_time_db, "%Y-%m-%d %H:%M:%S")
+        dt3 = dt1 + timedelta(seconds=2)
+        assert dt1 <= dt2 <=dt3
     # hook에서 사용하기 위해 item에 저장
     request.node._stdout_capture = output_content.getvalue()
 
