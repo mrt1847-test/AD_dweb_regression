@@ -134,7 +134,10 @@ def pytest_runtest_makereport(item, call):
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 screenshot_path = f"screenshots/{case_id}_{timestamp}.png"
                 os.makedirs(os.path.dirname(screenshot_path), exist_ok=True)
-                page.screenshot(path=screenshot_path)
+                try:
+                    page.screenshot(path=screenshot_path, timeout=30000)
+                except TimeoutError:
+                    print(f"[Warning] 스크린샷 실패: {screenshot_path} 타임아웃 발생")
         elif result.skipped:
             status_id = 2  # Blocked
             comment = "테스트 스킵"
@@ -144,13 +147,32 @@ def pytest_runtest_makereport(item, call):
             comment = "테스트 성공"
             screenshot_path = None
         # TestRail 결과 기록
-        payload = {"status_id": status_id, "comment": comment}
-        result_obj = testrail_post(f"add_result_for_case/{testrail_run_id}/{case_id}", payload)
+        duration_sec = result.duration
+
+        # print 로그 추가 (redirect_stdout)
+        stdout = getattr(item, "_stdout_capture", None)
+        if stdout:
+            comment += f"\n\n--- stdout 로그 ---\n{stdout.strip()}"
+
+
+        payload = {
+            "status_id": status_id,
+            "comment": comment
+        }
+        if duration_sec > 0.1:
+            payload["elapsed"] = f"{duration_sec:.1f}s"
+        try:
+            result_obj = testrail_post(f"add_result_for_case/{testrail_run_id}/{case_id}", payload)
+        except Exception as e:
+            print(f"[WARNING] TestRail 기록 실패: {e}")
         result_id = result_obj["id"]
         # 실패 시 스크린샷 첨부
         if screenshot_path:
             with open(screenshot_path, "rb") as f:
-                testrail_post(f"add_attachment_to_result/{result_id}", files={"attachment": f})
+                try:
+                    testrail_post(f"add_attachment_to_result/{result_id}", files={"attachment": f})
+                except Exception as e:
+                    print(f"[WARNING] TestRail 스크린샷 업로드 실패: {e}")
         print(f"[TestRail] case {case_id} 결과 기록 ({status_id})")
 
 
