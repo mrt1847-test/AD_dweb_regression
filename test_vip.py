@@ -99,7 +99,7 @@ def test_fetch_from_db(file_start_time, file_start_dt):
     # 전역 변수로 조회 결과를 저장 (다른 테스트에서 재사용)
     global click_db, imp_db, vimp_db
 
-    with open("json/test_srp.json", "r", encoding="utf-8") as f:
+    with open("json/test_vip.json", "r", encoding="utf-8") as f:
         data = json.load(f)
 
     # 상품번호만 뽑기
