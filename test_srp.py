@@ -97,6 +97,16 @@ def test_fetch_from_db(file_start_time):
     # 전역 변수로 조회 결과를 저장 (다른 테스트에서 재사용)
     global click_db, imp_db, vimp_db
 
+    with open("json/test_srp.json", "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    # 상품번호만 뽑기
+    product_ids = []
+    for case_group in data:
+        for case, items in case_group.items():
+            for _, info in items.items():
+                product_ids.append(info["상품번호"])
+
     # 1. 클릭 로그(click_db) 조회
     sql = f"""
     SELECT item_no, ins_date
@@ -113,6 +123,7 @@ def test_fetch_from_db(file_start_time):
     FROM baikali1xs.ad_ats_silver.ub_ad_cpc_click_gmkt
     WHERE ins_date >= '{file_start_time}'
       AND cguid = '11412244806446005562000000';
+      AND item_no IN ({','.join(map(str, product_ids))})
     """
     imp_db = db_check.query_databricks(sql)
     time.sleep(10)  # 조회 후 10초 대기
@@ -122,7 +133,8 @@ def test_fetch_from_db(file_start_time):
     SELECT item_no, ins_date
     FROM baikali1xs.ad_ats_silver.ub_ad_cpc_click_gmkt
     WHERE ins_date >= '{file_start_time}'
-      AND cguid = '11412244806446005562000000';
+      AND cguid = '11412244806446005562000000'
+      AND item_no IN ({','.join(map(str, product_ids))});
     """
     vimp_db = db_check.query_databricks(sql)
 
@@ -163,9 +175,15 @@ def test_srp_4(keyword, case_id, request):
         test_record = json.load(f)
     output_content = io.StringIO()
     with contextlib.redirect_stdout(output_content):
-        goodscode = test_record[0]["case2"][keyword]["상품번호"]
-        click_time = test_record[0]["case2"][keyword]["click"]
-        expose_time = test_record[0]["case2"][keyword]["exposure"]
+        # JSON에서 테스트에 필요한 값 추출
+        goodscode = test_record[0]["case2"][keyword]["상품번호"]  # 상품 번호
+        click_time = test_record[0]["case2"][keyword]["click"]  # 클릭 발생 시간
+        expose_time = test_record[0]["case2"][keyword]["exposure"]  # 노출 발생 시간
+
+        # DB 기록 검증
+        # - click_db : 클릭 로그 DB, 클릭 시간 검증
+        # - imp_db   : 노출 로그 DB, 노출 시간 검증
+        # - vimp_db  : 가상 노출 로그 DB, 노출 시간 검증
         db_check.assert_db_record_time(click_db, click_time, goodscode)
         db_check.assert_db_record_time(imp_db, expose_time, goodscode)
         db_check.assert_db_record_time(vimp_db, expose_time, goodscode)
