@@ -51,13 +51,39 @@ class DatabricksSPClient:
         return result
 
     def assert_db_record_time(self, db_data, record_time, goodscode):
-        k = next(
-            (i for i, row in enumerate(db_data["data_array"]) if row[0] == goodscode),
-            None  # 없을 경우 기본값
-        )
-        db_time = db_data["data_array"][k][0]
+        """
+       DB에 기록된 특정 상품의 시간 기록이 테스트 기록 시간과 일정 허용 오차 내에 있는지 검증하는 함수
 
+       :param db_data: dict, DB에서 조회한 데이터 (예: {"data_array": [[상품번호, ...], ...]})
+       :param record_time: str, 테스트 실행 시 기록한 시간 (형식: "YYYY-MM-DD HH:MM:SS")
+       :param goodscode: str, 검증할 상품 번호
+       :raises AssertionError: DB에 해당 상품이 없거나, DB 기록 시간이 허용 오차(10초)를 벗어날 경우
+       :return: None (검증 통과 시 아무 값도 반환하지 않음)
+
+       :example:
+       db_data = {
+           "data_array": [
+               ["2997549821", "2025-09-30 13:00:45"],
+               ["2512116583", "2025-09-30 13:01:03"]
+           ]
+       }
+       record_time = "2025-09-30 13:00:50"
+       goodscode = "2997549821"
+       self.assert_db_record_time(db_data, record_time, goodscode)
+       """
+        db_row = next(
+            (row for row in db_data["data_array"] if row[0] == goodscode),
+            None
+        )
+        if db_row is None:
+            raise AssertionError(f"{goodscode}에 해당하는 DB 기록이 없습니다.")  # DB에 레코드가 없는 경우 명확하게 실패 처리
+
+        db_time = db_row[0]  # 안전하게 db_row에서 시간 가져오기
+
+        # 테스트 기록 시간과 DB 기록 시간 비교
         dt1 = datetime.strptime(record_time, "%Y-%m-%d %H:%M:%S")
         dt2 = datetime.strptime(db_time, "%Y-%m-%d %H:%M:%S")
-        dt3 = dt1 + timedelta(seconds=10)
-        assert dt1 <= dt2 <= dt3
+        dt3 = dt1 + timedelta(seconds=10)  # 허용 오차 10초
+        print(f"[ASSERT_DB_RECORD_TIME] goodscode={goodscode}, record_time={dt1}, db_time={dt2}")
+
+        assert dt1 <= dt2 <= dt3  # DB 기록 시간이 테스트 기록 시간 ±10초 범위 안인지 확인
