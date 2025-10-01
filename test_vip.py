@@ -17,6 +17,10 @@ from datetime import datetime, timedelta
 def file_start_time():
     # 이 모듈(파일) 내 테스트가 처음 실행될 때 한 번만 호출됨
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+@pytest.fixture(scope="module")
+def file_start_dt():
+    # 이 모듈(파일) 내 테스트가 처음 실행될 때 한 번만 호출됨
+    return datetime.now().strftime("%Y%m%d")
 
 @pytest.mark.flaky(reruns=2, reruns_delay=1)
 @pytest.mark.parametrize("goods_num, case_id", vip_testcases1, ids=[c for _, c in vip_testcases1])
@@ -89,19 +93,29 @@ def test_vip_2(page, goods_num, case_id, request):
 click_db = None
 imp_db = None
 vimp_db = None
-
-def test_fetch_from_db(file_start_time):
+def test_fetch_from_db(file_start_time, file_start_dt):
     db_check = DatabricksSPClient()  # Databricks 클라이언트 객체 생성
 
     # 전역 변수로 조회 결과를 저장 (다른 테스트에서 재사용)
     global click_db, imp_db, vimp_db
+
+    with open("json/test_srp.json", "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    # 상품번호만 뽑기
+    product_ids = []
+    for case_group in data:
+        for case, items in case_group.items():
+            for _, info in items.items():
+                product_ids.append(info["상품번호"])
 
     # 1. 클릭 로그(click_db) 조회
     sql = f"""
     SELECT item_no, ins_date
     FROM baikali1xs.ad_ats_silver.ub_ad_cpc_click_gmkt
     WHERE ins_date >= '{file_start_time}'
-      AND cguid = '11412244806446005562000000';
+      AND cguid = '11758850530814005372000000'
+      AND dt = '{file_start_dt}';
     """
     click_db = db_check.query_databricks(sql)
     time.sleep(10)  # 조회 후 10초 대기 (DB 처리 반영 시간 고려)
@@ -109,9 +123,11 @@ def test_fetch_from_db(file_start_time):
     # 2. 노출 로그(imp_db) 조회
     sql = f"""
     SELECT item_no, ins_date
-    FROM baikali1xs.ad_ats_silver.ub_ad_cpc_click_gmkt
+    FROM baikali1xs.ad_ats_silver.ub_ad_cpc_imp_gmkt
     WHERE ins_date >= '{file_start_time}'
-      AND cguid = '11412244806446005562000000';
+      AND cguid = '11758850530814005372000000'
+      AND item_no IN ({','.join(map(str, product_ids))})
+      AND dt = '{file_start_dt}';
     """
     imp_db = db_check.query_databricks(sql)
     time.sleep(10)  # 조회 후 10초 대기
@@ -119,9 +135,11 @@ def test_fetch_from_db(file_start_time):
     # 3. 가상노출 로그(vimp_db) 조회
     sql = f"""
     SELECT item_no, ins_date
-    FROM baikali1xs.ad_ats_silver.ub_ad_cpc_click_gmkt
+    FROM baikali1xs.ad_ats_silver.ub_ad_cpc_vimp_gmkt
     WHERE ins_date >= '{file_start_time}'
-      AND cguid = '11412244806446005562000000';
+      AND cguid = '11758850530814005372000000'
+      AND item_no IN ({','.join(map(str, product_ids))})
+      AND dt = '{file_start_dt}';
     """
     vimp_db = db_check.query_databricks(sql)
 
