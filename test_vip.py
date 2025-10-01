@@ -1,5 +1,4 @@
 import time
-
 from pom.VipPage import Vip
 from pom.Etc import Etc
 from utils.TimeLogger import TimeLogger
