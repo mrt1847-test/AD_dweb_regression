@@ -2,6 +2,8 @@ import requests
 import time
 from dotenv import load_dotenv
 import os
+from datetime import datetime, timedelta
+
 load_dotenv()
 
 class DatabricksSPClient:
@@ -47,3 +49,15 @@ class DatabricksSPClient:
         # 3. 결과를 DataFrame으로 변환
         result = state_data.get("result", {})
         return result
+
+    def assert_db_record_time(self, db_data, record_time, goodscode):
+        k = next(
+            (i for i, row in enumerate(db_data["data_array"]) if row[0] == goodscode),
+            None  # 없을 경우 기본값
+        )
+        db_time = db_data["data_array"][k][0]
+
+        dt1 = datetime.strptime(record_time, "%Y-%m-%d %H:%M:%S")
+        dt2 = datetime.strptime(db_time, "%Y-%m-%d %H:%M:%S")
+        dt3 = dt1 + timedelta(seconds=10)
+        assert dt1 <= dt2 <= dt3

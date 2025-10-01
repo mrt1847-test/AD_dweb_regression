@@ -11,4 +11,4 @@ print(dt1)
 print(dt2)
 print(n_dt2)
 
-assert dt1 < n_dt2
+assert dt2 < dt1 < n_dt2
