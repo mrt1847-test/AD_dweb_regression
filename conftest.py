@@ -112,69 +112,90 @@ def pytest_sessionstart(session):
 def pytest_runtest_makereport(item, call):
     """
     각 테스트 결과를 TestRail에 기록 + 실패 시 스크린샷 첨부
+    INTERNALERROR 방지를 위해 모든 외부 호출은 try/except로 보호
     """
     outcome = yield
     result = outcome.get_result()
-    # case_id 가져오기 (parametrize에서 받은 값 기준)
-    case_id = item.funcargs.get("case_id")
-    if case_id is None or testrail_run_id is None:
-        return
-    # Cxxxx 형태면 숫자만 추출
-    if isinstance(case_id, str) and case_id.startswith("C"):
-        case_id = case_id[1:]
-    case_id = int(case_id)  # API는 int만 허용
-    if result.when == "call":  # 실제 실행 결과만 처리
-        if result.failed:
-            status_id = 5  # Failed
-            comment = f"테스트 실패: {result.longrepr}"
-            # 실패 시 스크린샷
-            page = item.funcargs.get("page")
-            screenshot_path = None
-            if page:
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                screenshot_path = f"screenshots/{case_id}_{timestamp}.png"
-                os.makedirs(os.path.dirname(screenshot_path), exist_ok=True)
+
+    try:
+        case_id = item.funcargs.get("case_id")
+        if case_id is None or testrail_run_id is None:
+            return
+
+        # Cxxxx → 숫자만 추출
+        if isinstance(case_id, str) and case_id.startswith("C"):
+            case_id = case_id[1:]
+        case_id = int(case_id)  # API는 int만 허용
+
+        screenshot_path = None
+        if result.when == "call":  # 실행 단계만 기록
+            if result.failed:
+                status_id = 5  # Failed
+                comment = f"테스트 실패: {result.longrepr}"
+
+                # 스크린샷 시도
                 try:
-                    page.screenshot(path=screenshot_path, timeout=30000)
-                except TimeoutError:
-                    print(f"[Warning] 스크린샷 실패: {screenshot_path} 타임아웃 발생")
-        elif result.skipped:
-            status_id = 2  # Blocked
-            comment = "테스트 스킵"
-            screenshot_path = None
-        else:
-            status_id = 1  # Passed
-            comment = "테스트 성공"
-            screenshot_path = None
-        # TestRail 결과 기록
-        duration_sec = result.duration
+                    page = item.funcargs.get("page")
+                    if page and not page.is_closed():
+                        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        screenshot_path = f"screenshots/{case_id}_{timestamp}.png"
+                        os.makedirs(os.path.dirname(screenshot_path), exist_ok=True)
+                        page.screenshot(path=screenshot_path, timeout=2000)
+                except Exception as e:
+                    print(f"[WARNING] 스크린샷 실패: {e}")
 
-        # print 로그 추가 (redirect_stdout)
-        stdout = getattr(item, "_stdout_capture", None)
-        if stdout:
-            comment += f"\n\n--- stdout 로그 ---\n{stdout.strip()}"
+            elif result.skipped:
+                status_id = 2  # Blocked
+                comment = "테스트 스킵"
+            else:
+                status_id = 1  # Passed
+                comment = "테스트 성공"
 
+            # 실행 시간 기록
+            duration_sec = getattr(result, "duration", 0)
+            if duration_sec and duration_sec > 0.1:
+                elapsed = f"{duration_sec:.1f}s"
+            else:
+                elapsed = None
 
-        payload = {
-            "status_id": status_id,
-            "comment": comment
-        }
-        if duration_sec > 0.1:
-            payload["elapsed"] = f"{duration_sec:.1f}s"
-        try:
-            result_obj = testrail_post(f"add_result_for_case/{testrail_run_id}/{case_id}", payload)
-        except Exception as e:
-            print(f"[WARNING] TestRail 기록 실패: {e}")
-        result_id = result_obj["id"]
-        # 실패 시 스크린샷 첨부
-        if screenshot_path:
-            with open(screenshot_path, "rb") as f:
+            # stdout 로그 추가
+            stdout = getattr(item, "_stdout_capture", None)
+            if stdout:
+                comment += f"\n\n--- stdout 로그 ---\n{stdout.strip()}"
+
+            # TestRail 기록
+            payload = {
+                "status_id": status_id,
+                "comment": comment,
+            }
+            if elapsed:
+                payload["elapsed"] = elapsed
+
+            result_id = None
+            try:
+                result_obj = testrail_post(
+                    f"add_result_for_case/{testrail_run_id}/{case_id}", payload
+                )
+                result_id = result_obj.get("id")
+            except Exception as e:
+                print(f"[WARNING] TestRail 기록 실패: {e}")
+
+            # 스크린샷 첨부
+            if screenshot_path and result_id:
                 try:
-                    testrail_post(f"add_attachment_to_result/{result_id}", files={"attachment": f})
+                    with open(screenshot_path, "rb") as f:
+                        testrail_post(
+                            f"add_attachment_to_result/{result_id}",
+                            files={"attachment": f},
+                        )
                 except Exception as e:
                     print(f"[WARNING] TestRail 스크린샷 업로드 실패: {e}")
-        print(f"[TestRail] case {case_id} 결과 기록 ({status_id})")
 
+            print(f"[TestRail] case {case_id} 결과 기록 ({status_id})")
+
+    except Exception as e:
+        # 어떤 이유로든 pytest 자체 중단 방지
+        print(f"[ERROR] pytest_runtest_makereport 처리 중 예외 발생 (무시됨): {e}")
 
 @pytest.hookimpl(trylast=True)
 def pytest_sessionfinish(session, exitstatus):
