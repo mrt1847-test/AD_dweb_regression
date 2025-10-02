@@ -93,8 +93,14 @@ def test_srp_2(page, keyword, case_id, request):
     # hook에서 사용하기 위해 item에 저장
     request.node._stdout_capture = output_content.getvalue()
 
-# def test_wait_15min():
-#     time.sleep(930)
+def test_wait_15min():
+    # -----------------------------
+    # DB에 데이터가 쌓일 때까지 대기
+    # 약 15분 30초 (930초) 동안 대기
+    # -----------------------------
+    print("DB 데이터 반영 대기 시작... 약 15분 30초 대기합니다.")
+    time.sleep(930)  # 실제 대기
+
 click_db = None
 imp_db = None
 vimp_db = None
