@@ -127,9 +127,9 @@ def test_fetch_from_db(file_start_time, file_start_dt, file_start_hour):
     product_ids_case2 = []
 
     for case_group in data:  # 리스트 안의 dict 순회
-        case1_items = case_group.get("case2", {})  # case2만 가져오기
-        for _, info in case1_items.items():
-            product_ids_case1.append(info["상품번호"])
+        case2_items = case_group.get("case2", {})  # case2만 가져오기
+        for _, info in case2_items.items():
+            product_ids_case2.append(info["상품번호"])
 
     # 1. 클릭 로그(click_db) 조회
     sql = f"""
