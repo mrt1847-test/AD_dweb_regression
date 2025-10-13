@@ -27,7 +27,7 @@ def file_start_hour():
 #--
 @pytest.mark.flaky(reruns=2, reruns_delay=1)
 @pytest.mark.parametrize("keyword, case_id", search_testcases1, ids=[c for _, c in search_testcases1])
-def test_srp_1(page, keyword, case_id, request):
+def test_01_srp_1(page, keyword, case_id, request):
     # TestRail 케이스 ID를 현재 실행 노드에 저장
     request.node._testrail_case_id = case_id
     etc = Etc(page)
@@ -60,7 +60,7 @@ def test_srp_1(page, keyword, case_id, request):
 
 @pytest.mark.flaky(reruns=2, reruns_delay=1)
 @pytest.mark.parametrize("keyword, case_id", search_testcases2, ids=[c for _, c in search_testcases2])
-def test_srp_2(page, keyword, case_id, request):
+def test_02_srp_2(page, keyword, case_id, request):
     # TestRail 케이스 ID를 현재 실행 노드에 저장
     request.node._testrail_case_id = case_id
     etc = Etc(page)
@@ -93,7 +93,7 @@ def test_srp_2(page, keyword, case_id, request):
     # hook에서 사용하기 위해 item에 저장
     request.node._stdout_capture = output_content.getvalue()
 
-def test_wait_15min():
+def test_03_wait_15min():
     # -----------------------------
     # DB에 데이터가 쌓일 때까지 대기
     # 약 15분 30초 (930초) 동안 대기
@@ -108,7 +108,7 @@ click_db_ai = None
 imp_db_ai = None
 vimp_db_ai = None
 
-def test_fetch_from_db(file_start_time, file_start_dt, file_start_hour):
+def test_04_fetch_from_db(file_start_time, file_start_dt, file_start_hour):
     db_check = DatabricksSPClient()  # Databricks 클라이언트 객체 생성
 
     # 전역 변수로 조회 결과를 저장 (다른 테스트에서 재사용)
@@ -208,7 +208,7 @@ def test_fetch_from_db(file_start_time, file_start_dt, file_start_hour):
 
 @pytest.mark.flaky(reruns=2, reruns_delay=1)
 @pytest.mark.parametrize("keyword, case_id", search_testcases3,ids=[c for _, c in search_testcases3])
-def test_srp_3(keyword, case_id, request):
+def test_05_srp_3(keyword, case_id, request):
     # TestRail 케이스 ID를 현재 실행 노드에 저장
     request.node._testrail_case_id = case_id
     db_check = DatabricksSPClient()
@@ -235,7 +235,7 @@ def test_srp_3(keyword, case_id, request):
 
 @pytest.mark.flaky(reruns=2, reruns_delay=1)
 @pytest.mark.parametrize("keyword, case_id", search_testcases4, ids=[c for _, c in search_testcases3])
-def test_srp_4(keyword, case_id, request):
+def test_06_srp_4(keyword, case_id, request):
     # TestRail 케이스 ID를 현재 실행 노드에 저장
     request.node._testrail_case_id = case_id
     db_check = DatabricksSPClient()
