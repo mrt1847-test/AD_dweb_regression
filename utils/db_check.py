@@ -3,6 +3,7 @@ import time
 from dotenv import load_dotenv
 import os
 from datetime import datetime, timedelta
+from src.gtas_python_core.gtas_python_core_vault import Vault
 
 load_dotenv()
 
@@ -11,7 +12,8 @@ class DatabricksSPClient:
 
         self.workspace_url = "https://adb-3951005985438017.17.azuredatabricks.net"
         self.warehouse_id = "d42f11fa1dd58612"
-        self.access_token = os.getenv("secret_key")
+        self.access_token = (Vault("gmarket").get_Kv_credential("authentication/testrail/automation")).get("password")
+
 
     def query_databricks(self, sql: str, wait_timeout="30s"):
         """Databricks SQL Warehouse에서 쿼리 실행 후 DataFrame으로 반환"""

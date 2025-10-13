@@ -9,7 +9,7 @@ from datetime import datetime
 
 # 브라우저 fixture (세션 단위, 한 번만 실행)
 @pytest.fixture(scope="session")
-def browser() -> Browser:
+def browser():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False, args=["--start-maximized"])  # True/False로 headless 제어
         yield browser
@@ -18,7 +18,7 @@ def browser() -> Browser:
 
 # 컨텍스트 fixture (브라우저 환경)
 @pytest.fixture(scope="function")
-def context(browser: Browser) -> BrowserContext:
+def context(browser: Browser):
     context = browser.new_context(no_viewport=True)
 
     # navigator.webdriver 우회
@@ -34,7 +34,7 @@ def context(browser: Browser) -> BrowserContext:
 
 # 페이지 fixture
 @pytest.fixture(scope="function")
-def page(context: BrowserContext) -> Page:
+def page(context: BrowserContext):
     page = context.new_page()
     page.set_default_timeout(10000)  # 기본 10초 타임아웃
     yield page
