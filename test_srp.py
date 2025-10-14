@@ -34,6 +34,7 @@ def test_01_srp_1(page, keyword, case_id, request):
     srp_page = Srp(page)
     logger = TimeLogger("json/test_srp.json")
 
+    #testrail 결과 기록시 로그 포함 위해 로그 수집
     output_content = io.StringIO()
     with contextlib.redirect_stdout(output_content):
 
@@ -67,7 +68,7 @@ def test_02_srp_2(page, keyword, case_id, request):
     srp_page = Srp(page)
     logger = TimeLogger("json/test_srp.json")
 
-
+    # testrail 결과 기록시 로그 포함 위해 로그 수집
     output_content = io.StringIO()
     with contextlib.redirect_stdout(output_content):
         # g마켓 홈 으로 이동
@@ -215,6 +216,7 @@ def test_05_srp_3(keyword, case_id, request):
     with open("json/test_srp.json", "r", encoding="utf-8") as f:
         test_record = json.load(f)
 
+    # testrail 결과 기록시 로그 포함 위해 로그 수집
     output_content = io.StringIO()
     with contextlib.redirect_stdout(output_content):
         # JSON에서 테스트에 필요한 값 추출
@@ -241,6 +243,8 @@ def test_06_srp_4(keyword, case_id, request):
     db_check = DatabricksSPClient()
     with open("json/test_srp.json", "r", encoding="utf-8") as f:
         test_record = json.load(f)
+
+    # testrail 결과 기록시 로그 포함 위해 로그 수집
     output_content = io.StringIO()
     with contextlib.redirect_stdout(output_content):
         # JSON에서 테스트에 필요한 값 추출

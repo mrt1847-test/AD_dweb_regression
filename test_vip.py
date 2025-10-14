@@ -34,6 +34,7 @@ def test_01_vip_1(page, goods_num, case_id, request):
     vip_page = Vip(page)
     logger = TimeLogger("json/test_vip.json")
 
+    # testrail 결과 기록시 로그 포함 위해 로그 수집
     output_content = io.StringIO()
     with contextlib.redirect_stdout(output_content):
         # g마켓 홈 으로 이동
@@ -66,6 +67,8 @@ def test_02_vip_2(page, goods_num, case_id, request):
     logger = TimeLogger("json/test_vip.json")
     etc = Etc(page)
     vip_page = Vip(page)
+
+    # testrail 결과 기록시 로그 포함 위해 로그 수집
     output_content = io.StringIO()
     with contextlib.redirect_stdout(output_content):
         # g마켓 홈 으로 이동
@@ -169,6 +172,8 @@ def test_05_srp_3(goods_num, case_id, request):
     db_check = DatabricksSPClient()
     with open("json/test_vip.json", "r", encoding="utf-8") as f:
         test_record = json.load(f)
+
+    # testrail 결과 기록시 로그 포함 위해 로그 수집
     output_content = io.StringIO()
     with contextlib.redirect_stdout(output_content):
         # JSON에서 테스트에 필요한 값 추출
@@ -196,6 +201,8 @@ def test_06_srp_4(goods_num, case_id, request):
     db_check = DatabricksSPClient()
     with open("json/test_vip.json", "r", encoding="utf-8") as f:
         test_record = json.load(f)
+
+    # testrail 결과 기록시 로그 포함 위해 로그 수집
     output_content = io.StringIO()
     with contextlib.redirect_stdout(output_content):
         # JSON에서 테스트에 필요한 값 추출
