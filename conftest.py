@@ -98,7 +98,7 @@ TESTRAIL_SUITE_ID = config['suite_id']
 TESTRAIL_SECTION_ID = config['section_id']  # ✅ 섹션 이름으로 지정
 TESTRAIL_USER = (Vault("gmarket").get_Kv_credential("authentication/testrail/automation")).get("username")
 TESTRAIL_TOKEN = (Vault("gmarket").get_Kv_credential("authentication/testrail/automation")).get("password")
-
+TESTRAIL_MILESTONE_ID = config['milestone_id']
 testrail_run_id = None
 case_id_map = {}  # {섹션 이름: [케이스ID 리스트]}
 
@@ -148,7 +148,8 @@ def pytest_sessionstart(session):
         "suite_id": TESTRAIL_SUITE_ID,
         "name": run_name,
         "include_all": False,
-        "case_ids": case_ids
+        "case_ids": case_ids,
+        "milestone_id": TESTRAIL_MILESTONE_ID
     }
     run = testrail_post(f"add_run/{TESTRAIL_PROJECT_ID}", payload)
     testrail_run_id = run["id"]
