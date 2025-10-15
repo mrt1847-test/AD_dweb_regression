@@ -124,7 +124,9 @@ def test_04_fetch_from_db(file_start_time, file_start_dt, file_start_hour):
     for case_group in data:
         for case, items in case_group.items():
             for _, info in items.items():
-                product_ids.append(info["상품번호"])
+                product_id = info.get("상품번호")
+                if product_id:
+                    product_ids.append(product_id)
 
     # 4. AI 매출업 클릭 로그(click_db) 조회
     sql = f"""
