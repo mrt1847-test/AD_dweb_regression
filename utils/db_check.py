@@ -79,7 +79,7 @@ class DatabricksSPClient:
         if db_row is None:
             raise AssertionError(f"{goodscode}에 해당하는 DB 기록이 없습니다.")  # DB에 레코드가 없는 경우 명확하게 실패 처리
 
-        db_time = db_row[0]  # 안전하게 db_row에서 시간 가져오기
+        db_time = db_row[1]  # 안전하게 db_row에서 시간 가져오기
 
         # 테스트 기록 시간과 DB 기록 시간 비교
         dt1 = datetime.strptime(record_time, "%Y-%m-%d %H:%M:%S")

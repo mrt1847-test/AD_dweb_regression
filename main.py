@@ -1,7 +1,10 @@
 import requests
 import time
+from utils.db_check import DatabricksSPClient
+from dotenv import load_dotenv
+import os
 
-
+load_dotenv()
 def query_databricks(workspace_url: str, access_token: str, warehouse_id: str, sql: str):
     """
     Databricks SQL Warehouse API를 통해 SQL 실행 후 결과를 반환하는 함수
@@ -75,11 +78,21 @@ def query_databricks(workspace_url: str, access_token: str, warehouse_id: str, s
 
 
 workspace_url = "https://adb-3951005985438017.17.azuredatabricks.net"
-access_token = ""
+access_token = os.getenv('secret_key')
 warehouse_id = "d42f11fa1dd58612"
 
-sql = "select ins_date, cguid from baikali1xs.ad_ats_silver.ub_ad_cpc_click_gmkt where ins_date >='2025-09-25 16:23:19' and item_no ='3408801000' and cguid = '11412244806446005562000000' limit 10 ;"
-
+sql = f"""
+    SELECT item_no, ins_date
+    FROM baikali1xs.ad_ats_silver.ub_ad_cpc_click_gmkt
+    WHERE ins_date >= '2025-10-15 11:18:53'
+      AND cguid = '11758850530814005372000000'
+      AND dt = '20251015' limit 10;
+    """
 result = query_databricks(workspace_url, access_token, warehouse_id, sql)
+db_check = DatabricksSPClient()
 
+click_time = "2025-10-15 10:15:21"
+goodscode = "3522530029"
 print(result)
+print(type(result))
+db_check.assert_db_record_time(result, click_time, goodscode)

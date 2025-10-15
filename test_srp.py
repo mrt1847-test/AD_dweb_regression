@@ -142,8 +142,8 @@ def test_04_fetch_from_db(file_start_time, file_start_dt, file_start_hour):
     FROM baikali1xs.ad_ats_silver.ub_ad_cpc_click_gmkt
     WHERE ins_date >= '{file_start_time}'
       AND cguid = '11758850530814005372000000'
-      AND dt = '{file_start_dt}'
-      AND hour IN ('{file_start_hour}', '{int(file_start_hour)+1:02d}');
+      AND item_no IN ({','.join(map(str, product_ids_case1))})
+      AND dt = '{file_start_dt}';
     """
     click_db = db_check.query_databricks(sql)
     time.sleep(10)  # 조회 후 10초 대기 (DB 처리 반영 시간 고려)
@@ -155,8 +155,7 @@ def test_04_fetch_from_db(file_start_time, file_start_dt, file_start_hour):
     WHERE ins_date >= '{file_start_time}'
       AND cguid = '11758850530814005372000000'
       AND item_no IN ({','.join(map(str, product_ids_case1))})
-      AND dt = '{file_start_dt}'
-      AND hour IN ('{file_start_hour}', '{int(file_start_hour)+1:02d}');
+      AND dt = '{file_start_dt}';
     """
     imp_db = db_check.query_databricks(sql)
     time.sleep(10)  # 조회 후 10초 대기
@@ -168,8 +167,7 @@ def test_04_fetch_from_db(file_start_time, file_start_dt, file_start_hour):
     WHERE ins_date >= '{file_start_time}'
       AND cguid = '11758850530814005372000000'
       AND item_no IN ({','.join(map(str, product_ids_case1))})
-      AND dt = '{file_start_dt}'
-      AND hour IN ('{file_start_hour}', '{int(file_start_hour)+1:02d}');
+      AND dt = '{file_start_dt}';
     """
     vimp_db = db_check.query_databricks(sql)
     time.sleep(10)  # 조회 후 10초 대기
@@ -180,8 +178,8 @@ def test_04_fetch_from_db(file_start_time, file_start_dt, file_start_hour):
     FROM baikali1xs.ad_ats_silver.ub_ra_click_gmkt
     WHERE ins_date >= '{file_start_time}'
       AND cguid = '11758850530814005372000000'
-      AND dt = '{file_start_dt}'
-      AND hour IN ('{file_start_hour}', '{int(file_start_hour)+1:02d}');
+      AND item_no IN ({','.join(map(str, product_ids_case2))})
+      AND dt = '{file_start_dt}';
     """
     click_db_ai = db_check.query_databricks(sql)
     time.sleep(10)  # 조회 후 10초 대기 (DB 처리 반영 시간 고려)
@@ -193,8 +191,7 @@ def test_04_fetch_from_db(file_start_time, file_start_dt, file_start_hour):
     WHERE ins_date >= '{file_start_time}'
       AND cguid = '11758850530814005372000000'
       AND item_no IN ({','.join(map(str, product_ids_case2))})
-      AND dt = '{file_start_dt}'
-      AND hour IN ('{file_start_hour}', '{int(file_start_hour)+1:02d}');
+      AND dt = '{file_start_dt}';
     """
     imp_db_ai = db_check.query_databricks(sql)
     time.sleep(10)  # 조회 후 10초 대기
@@ -206,10 +203,11 @@ def test_04_fetch_from_db(file_start_time, file_start_dt, file_start_hour):
     WHERE ins_date >= '{file_start_time}'
       AND cguid = '11758850530814005372000000'
       AND item_no IN ({','.join(map(str, product_ids_case2))})
-      AND dt = '{file_start_dt}'
-      AND hour IN ('{file_start_hour}', '{int(file_start_hour)+1:02d}');
+      AND dt = '{file_start_dt}';
     """
     vimp_db_ai = db_check.query_databricks(sql)
+    print(click_db)
+
 
 @pytest.mark.flaky(reruns=2, reruns_delay=1)
 @pytest.mark.parametrize("keyword, case_id", search_testcases3,ids=[c for _, c in search_testcases3])

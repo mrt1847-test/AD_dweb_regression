@@ -8,6 +8,7 @@ class Etc():
 
     def goto(self):
         self.page.goto("https://www.gmarket.co.kr")
+        time.sleep(2)
 
     def login(self, username: str, password: str):
         self.page.click("text=로그인")
