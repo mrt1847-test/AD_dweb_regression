@@ -3,6 +3,7 @@ import time
 from utils.db_check import DatabricksSPClient
 from dotenv import load_dotenv
 import os
+import json
 
 load_dotenv()
 def query_databricks(workspace_url: str, access_token: str, warehouse_id: str, sql: str):
@@ -80,13 +81,35 @@ def query_databricks(workspace_url: str, access_token: str, warehouse_id: str, s
 workspace_url = "https://adb-3951005985438017.17.azuredatabricks.net"
 access_token = os.getenv('secret_key')
 warehouse_id = "d42f11fa1dd58612"
+with open("json/test_srp.json", "r", encoding="utf-8") as f:
+    data = json.load(f)
+product_ids_case1 = []
 
-sql = f"""
+for case_group in data:  # 리스트 안의 dict 순회
+    case1_items = case_group.get("case1", {})  # case1만 가져오기
+    for _, info in case1_items.items():
+        product_id = info.get("상품번호")
+        if product_id:
+            product_ids_case1.append(product_id)
+
+print(product_ids_case1)
+print(','.join(map(str, product_ids_case1)))
+
+sql = """
     SELECT item_no, ins_date
     FROM baikali1xs.ad_ats_silver.ub_ad_cpc_click_gmkt
     WHERE ins_date >= '2025-10-15 11:18:53'
       AND cguid = '11758850530814005372000000'
-      AND dt = '20251015' limit 10;
+      AND item_no = '1861348584'
+      AND dt = '20251015'
+      AND hour IN ('11', '12');
+    """
+
+sql2 = """
+    SELECT item_no, dt, hour
+    FROM baikali1xs.ad_ats_silver.ub_ad_cpc_click_gmkt
+    WHERE item_no IN ('2588353016','4399796464')
+      AND cguid = '11758850530814005372000000';
     """
 result = query_databricks(workspace_url, access_token, warehouse_id, sql)
 db_check = DatabricksSPClient()
