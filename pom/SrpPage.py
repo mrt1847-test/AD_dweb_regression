@@ -68,7 +68,7 @@ class Srp():
         print("#", runtext, "시작")
         element = self.page.locator(f'a[data-montelena-goodscode="{goodscode}"]').nth(0)
         # 새 페이지 대기
-        time.sleep(3)
+        time.sleep(5)
         with self.page.context.expect_page() as new_page_info:
             element.click()
         new_page = new_page_info.value

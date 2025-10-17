@@ -86,7 +86,7 @@ with open("json/test_srp.json", "r", encoding="utf-8") as f:
 product_ids_case1 = []
 
 for case_group in data:  # 리스트 안의 dict 순회
-    case1_items = case_group.get("case1", {})  # case1만 가져오기
+    case1_items = case_group.get("case2", {})  # case1만 가져오기
     for _, info in case1_items.items():
         product_id = info.get("상품번호")
         if product_id:
@@ -94,14 +94,15 @@ for case_group in data:  # 리스트 안의 dict 순회
 
 print(product_ids_case1)
 print(','.join(map(str, product_ids_case1)))
+print(','.join(f"'{x}'" for x in product_ids_case1))
 
-sql = """
+sql = f"""
     SELECT item_no, ins_date
-    FROM baikali1xs.ad_ats_silver.ub_ad_cpc_click_gmkt
-    WHERE ins_date >= '2025-10-15 11:18:53'
+    FROM baikali1xs.ad_ats_silver.ub_ra_click_gmkt
+    WHERE ins_date >= '2025-10-17 11:36:41'
       AND cguid = '11758850530814005372000000'
-      AND item_no = '1861348584'
-      AND dt = '20251015'
+      AND item_no IN ({','.join(f"'{x}'" for x in product_ids_case1)})
+      AND dt = '20251017'
       AND hour IN ('11', '12');
     """
 

@@ -12,10 +12,14 @@ from datetime import datetime, timedelta
 
 #pipenv run pytest --cache-clear test.py
 
+
+FILE_START_TIME = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+FILE_START_HOUR = datetime.now().strftime("%H")
+
 @pytest.fixture(scope="module")
 def file_start_time():
     # 이 모듈(파일) 내 테스트가 처음 실행될 때 한 번만 호출됨
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return FILE_START_TIME
 @pytest.fixture(scope="module")
 def file_start_dt():
     # 이 모듈(파일) 내 테스트가 처음 실행될 때 한 번만 호출됨
@@ -23,7 +27,7 @@ def file_start_dt():
 @pytest.fixture(scope="module")
 def file_start_hour():
     # 이 모듈(파일) 내 테스트가 처음 실행될 때 한 번만 호출됨
-    return datetime.now().strftime("%H")
+    return FILE_START_HOUR
 
 
 @pytest.mark.flaky(reruns=2, reruns_delay=1)
@@ -33,32 +37,33 @@ def test_01_vip_1(page, goods_num, case_id, request):
     etc = Etc(page)
     vip_page = Vip(page)
     logger = TimeLogger("json/test_vip.json")
-
-    # testrail 결과 기록시 로그 포함 위해 로그 수집
-    output_content = io.StringIO()
-    with contextlib.redirect_stdout(output_content):
-        # g마켓 홈 으로 이동
-        etc.goto()
-        # 일반회원 로그인
-        etc.login("t4adbuy01", "Gmkt1004!!")
-        # vip 로 이동
-        etc.goto_vip(goods_num)
-        # 상품 노출 확인시간 저장
-        logger.record_time("case1", goods_num, "exposure")
-        # VT 모듈로 이동 후 확인
-        vip_page.vip_module_by_title("함께 보면 좋은 상품이에요")
-        # 광고상품 상품 번호 추출
-        result = vip_page.assert_item_in_module("함께 보면 좋은 상품이에요")
-        goodscode = result["goodscode"]
-        # 상품 번호 저장
-        logger.record_goodscode("case1",goods_num, goodscode)
-        target = result["target"]
-        # 상품 클릭시간 저장
-        logger.record_time("case1", goods_num, "click")
-        # 상품 클릭후 해당 vip 이동 확인
-        vip_page.click_goods(goodscode, target)
-    # hook에서 사용하기 위해 item에 저장
-    request.node._stdout_capture = output_content.getvalue()
+    try:
+        # testrail 결과 기록시 로그 포함 위해 로그 수집
+        output_content = io.StringIO()
+        with contextlib.redirect_stdout(output_content):
+            # g마켓 홈 으로 이동
+            etc.goto()
+            # 일반회원 로그인
+            # etc.login("t4adbuy01", "Gmkt1004!!")
+            # vip 로 이동
+            etc.goto_vip(goods_num)
+            # 상품 노출 확인시간 저장
+            logger.record_time("case1", goods_num, "exposure")
+            # VT 모듈로 이동 후 확인
+            vip_page.vip_module_by_title("함께 보면 좋은 상품이에요")
+            # 광고상품 상품 번호 추출
+            result = vip_page.assert_item_in_module("함께 보면 좋은 상품이에요")
+            goodscode = result["goodscode"]
+            # 상품 번호 저장
+            logger.record_goodscode("case1",goods_num, goodscode)
+            target = result["target"]
+            # 상품 클릭시간 저장
+            logger.record_time("case1", goods_num, "click")
+            # 상품 클릭후 해당 vip 이동 확인
+            vip_page.click_goods(goodscode, target)
+    finally:
+        # hook에서 사용하기 위해 item에 저장
+        request.node._stdout_capture = output_content.getvalue()
 
 @pytest.mark.flaky(reruns=2, reruns_delay=1)
 @pytest.mark.parametrize("goods_num, case_id", vip_testcases2, ids=[c for _, c in vip_testcases2])
@@ -67,33 +72,33 @@ def test_02_vip_2(page, goods_num, case_id, request):
     logger = TimeLogger("json/test_vip.json")
     etc = Etc(page)
     vip_page = Vip(page)
-
-    # testrail 결과 기록시 로그 포함 위해 로그 수집
-    output_content = io.StringIO()
-    with contextlib.redirect_stdout(output_content):
-        # g마켓 홈 으로 이동
-        etc.goto()
-        # 일반회원 로그인
-        etc.login("t4adbuy01", "Gmkt1004!!")
-        # vip 로 이동
-        etc.goto_vip(goods_num)
-        # 상품 노출 확인시간 저장
-        logger.record_time("case2", goods_num, "exposure")
-        # BT 모듈로 이동 후 확인
-        parent = vip_page.vip_module_by_title("함께 구매하면 좋은 상품이에요")
-        # 광고 태그 확인
-        result = vip_page.check_bt_ad_tag(parent)
-        goodscode = result["goodscode"]
-        # 광고상품 상품 번호 추출
-        logger.record_goodscode("case2", goods_num, goodscode)
-        target = result["target"]
-        # 상품 클릭시간 저장
-        logger.record_time("case2", goods_num, "click")
-        # 상품 클릭후 해당 vip 이동 확인
-        vip_page.click_goods(goodscode, target)
-
-    # hook에서 사용하기 위해 item에 저장
-    request.node._stdout_capture = output_content.getvalue()
+    try:
+        # testrail 결과 기록시 로그 포함 위해 로그 수집
+        output_content = io.StringIO()
+        with contextlib.redirect_stdout(output_content):
+            # g마켓 홈 으로 이동
+            etc.goto()
+            # 일반회원 로그인
+            # etc.login("t4adbuy01", "Gmkt1004!!")
+            # vip 로 이동
+            etc.goto_vip(goods_num)
+            # 상품 노출 확인시간 저장
+            logger.record_time("case2", goods_num, "exposure")
+            # BT 모듈로 이동 후 확인
+            parent = vip_page.vip_module_by_title("함께 구매하면 좋은 상품이에요")
+            # 광고 태그 확인
+            result = vip_page.check_bt_ad_tag(parent)
+            goodscode = result["goodscode"]
+            # 광고상품 상품 번호 추출
+            logger.record_goodscode("case2", goods_num, goodscode)
+            target = result["target"]
+            # 상품 클릭시간 저장
+            logger.record_time("case2", goods_num, "click")
+            # 상품 클릭후 해당 vip 이동 확인
+            vip_page.click_goods(goodscode, target)
+    finally:
+        # hook에서 사용하기 위해 item에 저장
+        request.node._stdout_capture = output_content.getvalue()
 
 def test_03_wait_15min():
     # -----------------------------
@@ -128,12 +133,51 @@ def test_04_fetch_from_db(file_start_time, file_start_dt, file_start_hour):
                 if product_id:
                     product_ids.append(product_id)
 
+    # 1. 파워클릭 클릭 로그(click_db) 조회
+    sql = f"""
+    SELECT item_no, ins_date
+    FROM baikali1xs.ad_ats_silver.ub_ad_cpc_click_gmkt
+    WHERE ins_date >= '{file_start_time}'
+      AND cguid = '11758850530814005372000000'
+      AND item_no IN ({','.join(f"'{x}'" for x in product_ids)})
+      AND dt = '{file_start_dt}'
+      AND hour IN ('{file_start_hour}', '{int(file_start_hour) + 1:02d}');
+    """
+    click_db = db_check.query_databricks(sql)
+    time.sleep(10)  # 조회 후 10초 대기 (DB 처리 반영 시간 고려)
+
+    # 2. 파워클릭 노출 로그(imp_db) 조회
+    sql = f"""
+    SELECT item_no, ins_date
+    FROM baikali1xs.ad_ats_silver.ub_ad_cpc_imp_gmkt
+    WHERE ins_date >= '{file_start_time}'
+      AND cguid = '11758850530814005372000000'
+      AND item_no IN ({','.join(f"'{x}'" for x in product_ids)})
+      AND dt = '{file_start_dt}'
+      AND hour IN ('{file_start_hour}', '{int(file_start_hour) + 1:02d}');
+    """
+    imp_db = db_check.query_databricks(sql)
+    time.sleep(10)  # 조회 후 10초 대기
+
+    # 3. 파워클릭 가상노출 로그(vimp_db) 조회
+    sql = f"""
+    SELECT item_no, ins_date
+    FROM baikali1xs.ad_ats_silver.ub_ad_cpc_vimp_gmkt
+    WHERE ins_date >= '{file_start_time}'
+      AND cguid = '11758850530814005372000000'
+      AND item_no IN ({','.join(f"'{x}'" for x in product_id)})
+      AND dt = '{file_start_dt}'
+      AND hour IN ('{file_start_hour}', '{int(file_start_hour) + 1:02d}');
+    """
+    vimp_db = db_check.query_databricks(sql)
+
     # 4. AI 매출업 클릭 로그(click_db) 조회
     sql = f"""
     SELECT item_no, ins_date
     FROM baikali1xs.ad_ats_silver.ub_ra_click_gmkt
     WHERE ins_date >= '{file_start_time}'
       AND cguid = '11758850530814005372000000'
+      AND item_no IN ({','.join(f"'{x}'" for x in product_ids)})
       AND dt = '{file_start_dt}'
       AND hour IN ('{file_start_hour}', '{int(file_start_hour) + 1:02d}');
     """
@@ -146,7 +190,7 @@ def test_04_fetch_from_db(file_start_time, file_start_dt, file_start_hour):
     FROM baikali1xs.ad_ats_silver.ub_ra_imp_gmkt
     WHERE ins_date >= '{file_start_time}'
       AND cguid = '11758850530814005372000000'
-      AND item_no IN ({','.join(map(str, product_ids))})
+      AND item_no IN ({','.join(f"'{x}'" for x in product_ids)})
       AND dt = '{file_start_dt}'
       AND hour IN ('{file_start_hour}', '{int(file_start_hour) + 1:02d}');
     """
@@ -159,14 +203,13 @@ def test_04_fetch_from_db(file_start_time, file_start_dt, file_start_hour):
     FROM baikali1xs.ad_ats_silver.ub_ra_vimp_gmkt
     WHERE ins_date >= '{file_start_time}'
       AND cguid = '11758850530814005372000000'
-      AND item_no IN ({','.join(map(str, product_ids))})
+      AND item_no IN ({','.join(f"'{x}'" for x in product_id)})
       AND dt = '{file_start_dt}'
       AND hour IN ('{file_start_hour}', '{int(file_start_hour) + 1:02d}');
     """
     vimp_db_ai = db_check.query_databricks(sql)
 
 
-@pytest.mark.flaky(reruns=2, reruns_delay=1)
 @pytest.mark.parametrize("goods_num, case_id", vip_testcases3, ids=[c for _, c in vip_testcases3])
 def test_05_srp_3(goods_num, case_id, request):
     # TestRail 케이스 ID를 현재 실행 노드에 저장
@@ -174,28 +217,58 @@ def test_05_srp_3(goods_num, case_id, request):
     db_check = DatabricksSPClient()
     with open("json/test_vip.json", "r", encoding="utf-8") as f:
         test_record = json.load(f)
+    try:
+        # testrail 결과 기록시 로그 포함 위해 로그 수집
+        output_content = io.StringIO()
+        with contextlib.redirect_stdout(output_content):
+            # JSON에서 테스트에 필요한 값 추출
+            goodscode = test_record[0]["case1"][goods_num]["상품번호"]   # 상품 번호
+            click_time = test_record[0]["case1"][goods_num]["click"]     # 클릭 발생 시간
+            expose_time = test_record[0]["case1"][goods_num]["exposure"] # 노출 발생 시간
 
-    # testrail 결과 기록시 로그 포함 위해 로그 수집
-    output_content = io.StringIO()
-    with contextlib.redirect_stdout(output_content):
-        # JSON에서 테스트에 필요한 값 추출
-        goodscode = test_record[0]["case1"][goods_num]["상품번호"]   # 상품 번호
-        click_time = test_record[0]["case1"][goods_num]["click"]     # 클릭 발생 시간
-        expose_time = test_record[0]["case1"][goods_num]["exposure"] # 노출 발생 시간
+            # DB 기록 검증
+            try:
+                # - click_db : 클릭 로그 DB, 클릭 시간 검증
+                db_check.assert_db_record_time(click_db, click_time, goodscode)
+                print("click_db 조회시 적재 확인")
+            except:
+                try:
+                    # - click_db : 클릭 로그 DB, 클릭 시간 검증
+                    db_check.assert_db_record_time(click_db_ai, click_time, goodscode)
+                    print("click_db_ai 조회시 적재 확인")
+                except:
+                    print("click_db 조회 오류")
+                    raise
 
-        # DB 기록 검증
-        # - click_db : 클릭 로그 DB, 클릭 시간 검증
-        # - imp_db   : 노출 로그 DB, 노출 시간 검증
-        # - vimp_db  : 가상 노출 로그 DB, 노출 시간 검증
-        db_check.assert_db_record_time(click_db_ai, click_time, goodscode)
-        db_check.assert_db_record_time(imp_db_ai, expose_time, goodscode)
-        db_check.assert_db_record_time(vimp_db_ai, expose_time, goodscode)
+            try:
+                # - imp_db   : 노출 로그 DB, 노출 시간 검증
+                db_check.assert_db_record_time(imp_db, expose_time, goodscode)
+                print("imp_db 조회시 적재 확인")
+            except:
+                try:
+                    # - imp_db   : 노출 로그 DB, 노출 시간 검증
+                    db_check.assert_db_record_time(imp_db_ai, expose_time, goodscode)
+                    print("imp_db_ai 조회시 적재 확인")
+                except:
+                    print("imp_db 조회 오류")
+                    raise
+            try:
+                # - vimp_db  : 가상 노출 로그 DB, 노출 시간 검증
+                db_check.assert_db_record_time(vimp_db, expose_time, goodscode)
+                print("vimp_db 조회시 적재 확인")
+            except:
+                try:
+                    # - vimp_db  : 가상 노출 로그 DB, 노출 시간 검증
+                    db_check.assert_db_record_time(vimp_db_ai, expose_time, goodscode)
+                    print("vimp_db_ai 조회시 적재 확인")
+                except:
+                    print("vimp_db 조회 오류")
+                    raise
+    finally:
+        # hook에서 사용하기 위해 item에 저장
+        request.node._stdout_capture = output_content.getvalue()
 
-    # hook에서 사용하기 위해 item에 저장
-    request.node._stdout_capture = output_content.getvalue()
 
-
-@pytest.mark.flaky(reruns=2, reruns_delay=1)
 @pytest.mark.parametrize("goods_num, case_id", vip_testcases4, ids=[c for _, c in vip_testcases4])
 def test_06_srp_4(goods_num, case_id, request):
     # TestRail 케이스 ID를 현재 실행 노드에 저장
@@ -203,22 +276,53 @@ def test_06_srp_4(goods_num, case_id, request):
     db_check = DatabricksSPClient()
     with open("json/test_vip.json", "r", encoding="utf-8") as f:
         test_record = json.load(f)
+    try:
+        # testrail 결과 기록시 로그 포함 위해 로그 수집
+        output_content = io.StringIO()
+        with contextlib.redirect_stdout(output_content):
+            # JSON에서 테스트에 필요한 값 추출
+            goodscode = test_record[0]["case2"][goods_num]["상품번호"]  # 상품 번호
+            click_time = test_record[0]["case2"][goods_num]["click"]  # 클릭 발생 시간
+            expose_time = test_record[0]["case2"][goods_num]["exposure"]  # 노출 발생 시간
 
-    # testrail 결과 기록시 로그 포함 위해 로그 수집
-    output_content = io.StringIO()
-    with contextlib.redirect_stdout(output_content):
-        # JSON에서 테스트에 필요한 값 추출
-        goodscode = test_record[0]["case2"][goods_num]["상품번호"]  # 상품 번호
-        click_time = test_record[0]["case2"][goods_num]["click"]  # 클릭 발생 시간
-        expose_time = test_record[0]["case2"][goods_num]["exposure"]  # 노출 발생 시간
+            # DB 기록 검증
+            try:
+                # - click_db : 클릭 로그 DB, 클릭 시간 검증
+                db_check.assert_db_record_time(click_db, click_time, goodscode)
+                print("click_db 조회시 적재 확인")
+            except:
+                try:
+                    # - click_db : 클릭 로그 DB, 클릭 시간 검증
+                    db_check.assert_db_record_time(click_db_ai, click_time, goodscode)
+                    print("click_db_ai 조회시 적재 확인")
+                except:
+                    print("click_db 조회 오류")
+                    raise
 
-        # DB 기록 검증
-        # - click_db : 클릭 로그 DB, 클릭 시간 검증
-        # - imp_db   : 노출 로그 DB, 노출 시간 검증
-        # - vimp_db  : 가상 노출 로그 DB, 노출 시간 검증
-        db_check.assert_db_record_time(click_db_ai, click_time, goodscode)
-        db_check.assert_db_record_time(imp_db_ai, expose_time, goodscode)
-        db_check.assert_db_record_time(vimp_db_ai, expose_time, goodscode)
-
-    # hook에서 사용하기 위해 item에 저장
-    request.node._stdout_capture = output_content.getvalue()
+            try:
+                # - imp_db   : 노출 로그 DB, 노출 시간 검증
+                db_check.assert_db_record_time(imp_db, expose_time, goodscode)
+                print("imp_db 조회시 적재 확인")
+            except:
+                try:
+                    # - imp_db   : 노출 로그 DB, 노출 시간 검증
+                    db_check.assert_db_record_time(imp_db_ai, expose_time, goodscode)
+                    print("imp_db_ai 조회시 적재 확인")
+                except:
+                    print("imp_db 조회 오류")
+                    raise
+            try:
+                # - vimp_db  : 가상 노출 로그 DB, 노출 시간 검증
+                db_check.assert_db_record_time(vimp_db, expose_time, goodscode)
+                print("vimp_db 조회시 적재 확인")
+            except:
+                try:
+                    # - vimp_db  : 가상 노출 로그 DB, 노출 시간 검증
+                    db_check.assert_db_record_time(vimp_db_ai, expose_time, goodscode)
+                    print("vimp_db_ai 조회시 적재 확인")
+                except:
+                    print("vimp_db 조회 오류")
+                    raise
+    finally:
+        # hook에서 사용하기 위해 item에 저장
+        request.node._stdout_capture = output_content.getvalue()

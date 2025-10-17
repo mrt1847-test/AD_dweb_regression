@@ -17,6 +17,13 @@ class Etc():
         self.page.fill("#typeMemberInputPassword", password)
         self.page.click("#btn_memberLogin")
 
+        #로그인 확인
+        try:
+            self.page.get_by_role("link", name="로그아웃")
+        except:
+            time.sleep(60)
+
+
     def query_databricks(workspace_url: str, access_token: str, warehouse_id: str, sql: str):
         """
         Databricks SQL Warehouse API를 통해 SQL 실행 후 결과를 반환하는 함수

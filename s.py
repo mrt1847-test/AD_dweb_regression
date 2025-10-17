@@ -1,10 +1,19 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
+# record_time = "2025-10-16 11:02:20"
+# db_time = "2025-10-16 11:02:21"
+# goodscode = "30"
+#
+# dt1 = datetime.strptime(record_time, "%Y-%m-%d %H:%M:%S")
+# dt2 = datetime.strptime(db_time, "%Y-%m-%d %H:%M:%S")
+# dt1 = datetime.strptime(record_time, "%Y-%m-%d %H:%M:%S")
+# dt3 = dt1 + timedelta(seconds=10)  # 허용 오차 10초
+# # 하나라도 assert 통과하는지 확인
+#
+# if dt1 <= dt2 <= dt3:
+#     print("k")
 
-def file_start_hour():
-    # 이 모듈(파일) 내 테스트가 처음 실행될 때 한 번만 호출됨
-    return datetime.now().strftime("%H")
-
-a= file_start_hour()
-b = "{:02d}".format(int(a) + 1)
-# ['2997549821', '2512116583', '3101285106', '2632242759']
+a= [1,2,3]
+b = [4,5,6]
+c= a+b
+print(c)

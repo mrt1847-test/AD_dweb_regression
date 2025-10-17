@@ -8,38 +8,132 @@ import requests
 from datetime import datetime
 from pathlib import Path
 
-# 브라우저 fixture (세션 단위, 한 번만 실행)
+
+# # 브라우저 fixture (세션 단위, 한 번만 실행)
+# @pytest.fixture(scope="session")
+# def browser():
+#     with sync_playwright() as p:
+#         browser = p.chromium.launch(headless=False, args=["--start-maximized"])  # True/False로 headless 제어
+#         yield browser
+#         browser.close()
+#
+#
+# # 컨텍스트 fixture (브라우저 환경)
+# @pytest.fixture(scope="function")
+# def context(browser: Browser):
+#     context = browser.new_context(no_viewport=True)
+#
+#     # navigator.webdriver 우회
+#     context.add_init_script("""
+#         Object.defineProperty(navigator, 'webdriver', {
+#             get: () => undefined
+#         });
+#     """)
+#
+#     yield context
+#     context.close()
+#
+#
+# # 페이지 fixture
+# @pytest.fixture(scope="function")
+# def page(context: BrowserContext):
+#     page = context.new_page()
+#     page.set_default_timeout(10000)  # 기본 10초 타임아웃
+#     yield page
+#     page.close()
+
+
+STATE_PATH = "state.json"
+GMARKET_URL = "https://m.gmarket.co.kr"  # 모바일 페이지 기준 셀렉터 안정성
+# ------------------------
+# :일: Playwright 세션 단위 fixture
+# ------------------------
 @pytest.fixture(scope="session")
-def browser():
+def pw():
+    """Playwright 세션 관리"""
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False, args=["--start-maximized"])  # True/False로 headless 제어
-        yield browser
-        browser.close()
-
-
-# 컨텍스트 fixture (브라우저 환경)
+        yield p
+# ------------------------
+# :둘: 브라우저 fixture
+# ------------------------
+@pytest.fixture(scope="session")
+def browser(pw):
+    """세션 단위 브라우저"""
+    browser = pw.chromium.launch(headless=False)
+    yield browser
+    browser.close()
+# ------------------------
+# :셋: 로그인 상태 검증
+# ------------------------
+def is_state_valid(state_path: str) -> bool:
+    """state.json이 유효한지 확인 (쿠키 기반)"""
+    if not os.path.exists(state_path):
+        return False
+    try:
+        with open(state_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        cookies = data.get("cookies", [])
+        now = time.time()
+        # 쿠키 하나라도 만료되지 않았으면 로그인 유지 가능
+        if any("expires" in c and c["expires"] and c["expires"] > now for c in cookies):
+            return True
+        return False
+    except Exception as e:
+        print(f"[WARN] state.json 검증 오류: {e}")
+        return False
+# ------------------------
+# :넷: 로그인 수행 + state.json 저장
+# ------------------------
+def create_login_state(pw):
+    """로그인 수행 후 state.json 저장"""
+    print("[INFO] 로그인 절차 시작")
+    browser = pw.chromium.launch(headless=False)  # 화면 확인용
+    context = browser.new_context()
+    page = context.new_page()
+    page.goto(GMARKET_URL)
+    # 로그인 페이지 이동 및 입력
+    page.click("text=로그인")
+    page.fill("#typeMemberInputId", "t4adbuy01")
+    page.fill("#typeMemberInputPassword", "Gmkt1004!!")
+    page.click("#btn_memberLogin")
+    # 로그인 완료 대기
+    page.wait_for_selector("text=로그아웃", timeout=15000)
+    # 로그인 상태 저장
+    context.storage_state(path=STATE_PATH)
+    browser.close()
+    print("[INFO] 로그인 완료 및 state.json 저장됨")
+# ------------------------
+# :다섯: 로그인 상태 fixture
+# ------------------------
+@pytest.fixture(scope="session")
+def ensure_login_state(pw):
+    """
+    state.json 존재 여부 및 유효성 확인.
+    없거나 만료 시 자동 로그인 수행
+    """
+    if not os.path.exists(STATE_PATH):
+        print("[INFO] state.json 없음 → 로그인 시도")
+        create_login_state(pw)
+    elif not is_state_valid(STATE_PATH):
+        print("[INFO] state.json 만료됨 → 재로그인 시도")
+        create_login_state(pw)
+    else:
+        print("[INFO] 로그인 세션 유효 → 기존 state.json 사용")
+    return STATE_PATH
+# ------------------------
+# :여섯: page fixture
+# ------------------------
 @pytest.fixture(scope="function")
-def context(browser: Browser):
-    context = browser.new_context(no_viewport=True)
-
-    # navigator.webdriver 우회
-    context.add_init_script("""
-        Object.defineProperty(navigator, 'webdriver', {
-            get: () => undefined
-        });
-    """)
-
-    yield context
+def page(browser, ensure_login_state):
+    """
+    로그인 상태가 보장된 page fixture
+    각 테스트마다 격리된 context 제공
+    """
+    context = browser.new_context(storage_state=ensure_login_state)
+    page = context.new_page()
+    yield page
     context.close()
 
-
-# 페이지 fixture
-@pytest.fixture(scope="function")
-def page(context: BrowserContext):
-    page = context.new_page()
-    page.set_default_timeout(10000)  # 기본 10초 타임아웃
-    yield page
-    page.close()
 
 def pytest_report_teststatus(report, config):
     # 이름에 'wait_'가 들어간 테스트는 리포트 출력에서 숨김
@@ -51,9 +145,11 @@ def pytest_report_teststatus(report, config):
 # JSON 파일이 들어 있는 폴더 지정
 JSON_DIR = Path(__file__).parent / "json"  # json 폴더 내의 JSON 파일 전부 대상
 
+
 def get_json_files():
     """폴더 내 모든 .json 파일 경로 리스트 반환"""
     return sorted(JSON_DIR.glob("*.json"))
+
 
 def clear_json_cases(json_data):
     """
@@ -62,13 +158,14 @@ def clear_json_cases(json_data):
     """
     cleared_list = []  # 초기화된 JSON 데이터를 담을 리스트
 
-    for case_group in json_data:              # 각 JSON 객체 순회
-        cleared_group = {}                    # 초기화된 case 묶음
-        for case_name in case_group.keys():   # case1, case2 등 키 순회
-            cleared_group[case_name] = {}     # 내부 데이터 비우기
-        cleared_list.append(cleared_group)    # 변환된 데이터 추가
+    for case_group in json_data:  # 각 JSON 객체 순회
+        cleared_group = {}  # 초기화된 case 묶음
+        for case_name in case_group.keys():  # case1, case2 등 키 순회
+            cleared_group[case_name] = {}  # 내부 데이터 비우기
+        cleared_list.append(cleared_group)  # 변환된 데이터 추가
 
     return cleared_list
+
 
 @pytest.fixture(scope="session", autouse=True)
 def clear_all_json_files():
@@ -85,7 +182,6 @@ def clear_all_json_files():
             json.dump(cleared, f, ensure_ascii=False, indent=2)
 
     print(f"✅ JSON 초기화 완료: {len(files)}개 파일 처리됨")
-
 
 
 with open('config.json') as config_file:
@@ -154,6 +250,7 @@ def pytest_sessionstart(session):
     run = testrail_post(f"add_run/{TESTRAIL_PROJECT_ID}", payload)
     testrail_run_id = run["id"]
     print(f"[TestRail] section_id '{TESTRAIL_SECTION_ID}' Run 생성 완료 (ID={testrail_run_id})")
+
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
@@ -258,63 +355,3 @@ def pytest_sessionfinish(session, exitstatus):
     if os.path.exists(screenshots_dir):
         shutil.rmtree(screenshots_dir)  # 폴더 통째로 삭제
         print(f"[CLEANUP] '{screenshots_dir}' 폴더 삭제 완료")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# import os
-# import pytest
-# from playwright.sync_api import sync_playwright
-#
-# STATE_PATH = "state.json"
-#
-# @pytest.fixture(scope="session")
-# def ensure_login_state():
-#     """로그인 상태가 저장된 state.json을 보장하는 fixture"""
-#     if not os.path.exists(STATE_PATH):
-#         with sync_playwright() as p:
-#             browser = p.chromium.launch(headless=False)
-#             context = browser.new_context()
-#             page = context.new_page()
-#
-#             page.goto("https://www.gmarket.co.kr")
-#             page.click("text=로그인")
-#             page.fill("#typeMemberInputId", "cease2504")
-#             page.fill("#typeMemberInputPassword", "asdf12!@")
-#             page.click("#btn_memberLogin")
-#
-#             # state.json 저장
-#             context.storage_state(path=STATE_PATH)
-#             browser.close()
-#     return STATE_PATH
-#
-#
-# @pytest.fixture(scope="function")
-# def page(ensure_login_state):
-#     """로그인 상태가 보장된 페이지 fixture"""
-#     with sync_playwright() as p:
-#         browser = p.chromium.launch(headless=False)
-#         context = browser.new_context(storage_state=ensure_login_state)
-#         page = context.new_page()
-#         yield page
-#         context.close()
-#         browser.close()
