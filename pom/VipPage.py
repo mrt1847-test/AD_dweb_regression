@@ -91,6 +91,8 @@ class Vip():
                 parent.locator("span > button.next").click()
                 self.page.wait_for_timeout(2000)  # 로딩 대기
 
+        parent.locator("span > button.prev").click()
+
         print(f"\n총 광고태그가 있는 상품 개수: {ad_count} / 15")
         print("#", goodscode)
         print("#", runtext, "종료")
@@ -111,6 +113,7 @@ class Vip():
 
         runtext = f'VIP > {goodscode} 상품 클릭'
         print("#", runtext, "시작")
+        time.sleep(5)
         target.click()
         url = self.page.url
         time.sleep(3)
