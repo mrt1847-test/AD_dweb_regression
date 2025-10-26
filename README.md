@@ -1,4 +1,4 @@
-[README.md](https://github.com/user-attachments/files/23147622/README.md)
+
 # AD_dweb_regression
 
 Playwright + Python 기반 웹 광고 영역 회귀 테스트 자동화 프로젝트입니다.  
