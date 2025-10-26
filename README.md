@@ -10,18 +10,24 @@ Playwright + Python 기반 웹 광고 영역 회귀 테스트 자동화 프로�
 
 ```
 AD_dweb_regression/
-├── case_data/        # 테스트레일 연동과 파라미터라이즈화를 위한 TC 번호 데이터
-├── json/             # 이벤트 노출/클릭 시간과 상품 번호 데이터 (JSON 형식)
-├── pom/              # POM 형식의 함수
-├── utils/            # 공통 유틸리티 함수
-├── .gitignore        # Git 무시 파일
-├── Pipfile           # 의존성 관리 파일
-├── Pipfile.lock      # 고정된 의존성 버전
-├── config.json       # 환경 설정 파일
-├── conftest.py       # Pytest 설정 파일
-├── state.json        # 로그인 상태 저장 파일
-├── test_srp.py       # SRP 테스트 케이스
-└── test_vip.py       # VIP 테스트 케이스
+├── case_data/ # 테스트레일 연동과 파라미터라이즈화를 위한 TC 번호 데이터
+├── json/ # 이벤트 노출/클릭 시간과 상품 번호 데이터 (JSON 형식)
+├── pom/ # Page Object Model 기반 클래스
+│ ├── Etc.py # 공통 기능 함수
+│ ├── SrpPage.py # SRP 페이지 관련 테스트 함수
+│ ├── HomePage.py # Home 페이지 관련 테스트 함수
+│ └── VipPage.py # VIP 페이지 관련 테스트 함수
+├── utils/ # 공통 유틸리티 함수
+│ ├── TimeLogger.py # 테스트 실행 시간 로깅
+│ └── db_check.py # DB 로그 검증 함수
+├── .gitignore # Git 무시 파일
+├── Pipfile # 의존성 관리 파일
+├── Pipfile.lock # 고정된 의존성 버전
+├── config.json # 환경 설정 파일
+├── conftest.py # Pytest 설정 파일
+├── state.json # 로그인 상태 저장 파일
+├── test_srp.py # SRP 테스트 케이스
+└── test_vip.py # VIP 테스트 케이스
 ```
 
 ---
