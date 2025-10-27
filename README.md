@@ -6,7 +6,7 @@ Playwright + Python 기반 웹 광고 영역 회귀 테스트 자동화 프로�
 
 ---
 
-## 📁 프로젝트 구조
+## 프로젝트 구조
 
 ```
 AD_dweb_regression/
@@ -32,7 +32,7 @@ AD_dweb_regression/
 
 ---
 
-## ⚙️ 기술 스택
+## 기술 스택
 
 - **언어**: Python 3.11
 - **자동화 도구**: Playwright  
@@ -43,14 +43,14 @@ AD_dweb_regression/
 
 ---
 
-## 🧪 테스트 범위 (Scope)
+## 테스트 범위 (Scope)
 
 - **대상 시스템/모듈**: 광고 모듈, 상품 노출 검증, 광고 관련 DB 로그  
 - **테스트 제외 항목**: UI 세부 디자인 등 비기능 영역  
 
 ---
 
-## 🧠 테스트 전략 (Strategy)
+## 테스트 전략 (Strategy)
 
 - **도구 선정**: Playwright, Databricks REST API  
 - **구현 구조**: Page Object Model (POM) 기반, 검색어·상품 다양화를 위한 파라미터라이즈 적용  
@@ -58,7 +58,7 @@ AD_dweb_regression/
 - **테스트 관리**: TestRail 연동 및 Slack 알림을 통한 결과 공유  
 
 
-## 🚀 설치 및 실행 방법
+## 설치 및 실행 방법
 
 ### 1. 의존성 설치
 
