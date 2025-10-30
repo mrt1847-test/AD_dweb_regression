@@ -54,8 +54,8 @@ AD_dweb_regression/
 
 - **도구 선정**: Playwright, Databricks REST API  
 - **구현 구조**: Page Object Model (POM) 기반, 검색어·상품 다양화를 위한 파라미터라이즈 적용  
-- **테스트 실행 정책**: 광고 영역 배포 시점 및 정기 스케줄에 따라 자동 실행  
-- **테스트 관리**: TestRail 연동 및 Slack 알림을 통한 결과 공유  
+- **테스트 실행 정책**: 추후 협의 예정
+- **테스트 관리**: TestRail 연동 하여 결과기록
 
 
 ## 설치 및 실행 방법
