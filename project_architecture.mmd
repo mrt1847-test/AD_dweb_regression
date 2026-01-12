@@ -1,53 +1,46 @@
 graph LR
 
-    %% ===== Style Definitions (NODE ONLY) =====
-    %% 노드 내부를 흰색이나 밝은 톤으로 처리하여 가독성을 높였습니다.
-    classDef web fill:#ffffff,stroke:#475569,stroke-width:2px;
-    classDef auto fill:#ffffff,stroke:#1e3a8a,stroke-width:2px;
-    classDef db fill:#ffffff,stroke:#334155,stroke-width:2px;
-    classDef val fill:#ffffff,stroke:#16a34a,stroke-width:2px;
+    %% ===== Node Style =====
+    classDef base fill:#ffffff,stroke:#475569,stroke-width:1.5px;
+    classDef highlight fill:#ffffff,stroke:#0f766e,stroke-width:2px;
 
-    %% ===== Web Section =====
+    %% ===== Web =====
     subgraph WEB ["WEB UI"]
         A["AD Exposure / Click"]
     end
 
-    %% ===== Automation Section =====
-    subgraph AUTO ["AUTOMATION (Playwright)"]
+    %% ===== Automation =====
+    subgraph AUTO ["AUTOMATION"]
         B["UI Action Executor"]
         C["Context Collector\nID + Timestamp"]
         B -.-> C
     end
 
-    %% ===== Backend Section =====
+    %% ===== Backend =====
     subgraph BACKEND ["BACKEND"]
         D[("Ad Log Table\nDatabricks")]
     end
 
-    %% ===== Validation Section =====
+    %% ===== Validation =====
     subgraph VAL ["VALIDATION"]
         E["Query Client"]
         F{{"Data Matcher"}}
         G["TestRail Report"]
-        E --> F
-        F --> G
+        E --> F --> G
     end
 
     %% ===== Flow =====
     A --> B
-    B -- "User Event" --> D
-    C -- "Expected" --> F
-    D -- "Actual" --> E
+    B --> D
+    C --> F
+    D --> E
 
-    %% ===== Apply Subgraph Area Styles (색상 변경 지점) =====
-    %% WEB: 연한 보라/그레이, AUTO: 연한 블루, BACKEND: 차분한 그레이, VAL: 연한 민트
-    style WEB fill:#f1f5f9,stroke:#6366f1,stroke-width:2.5px
-    style AUTO fill:#f0f9ff,stroke:#0ea5e9,stroke-width:2.5px
-    style BACKEND fill:#f8fafc,stroke:#64748b,stroke-width:2.5px
-    style VAL fill:#f0fdf4,stroke:#22c55e,stroke-width:2.5px
+    %% ===== Subgraph Style =====
+    style WEB fill:#f8fafc,stroke:#cbd5f5
+    style AUTO fill:#f8fafc,stroke:#cbd5f5
+    style BACKEND fill:#f8fafc,stroke:#cbd5f5
+    style VAL fill:#f0fdfa,stroke:#0f766e
 
-    %% ===== Apply Classes (노드 개별 스타일) =====
-    class A web
-    class B,C auto
-    class D db
-    class E,F,G val
+    %% ===== Apply Classes =====
+    class A,B,C,D,E base
+    class F,G highlight
